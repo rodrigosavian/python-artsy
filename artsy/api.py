@@ -5,22 +5,36 @@ import requests
 class BaseRequest(object):
     BASE_URL_API = 'https://api.artsy.net/api'
 
-    def __init__(self, client_id, client_secret):
-        self.client_id = client_id
-        self.client_secret = client_secret
+    def __init__(self, 
+            client_id, 
+            client_secret, 
+            grant_type='credentials', 
+            **kwargs):
+        self.xapp_token = self.get_xapp_token(client_id, client_secret).json()
+        self.access_token = self.get_access_token(
+                client_id, client_secret, grant_type, **kwargs).json()
 
-    def get_xapp_token(self):
-        return requests.post('%s/tokens/xapp_token' % self.BASE_URL_API,
+    def get_xapp_token(self, client_id, client_secret):
+        return requests.post('https://api.artsy.net/api/tokens/xapp_token',
                 params={
-                    'client_id': self.client_id,
-                    'client_secret': self.client_secret
+                    'client_id': client_id,
+                    'client_secret': client_secret
                 })
 
+    def get_access_token(self, client_id, client_secret, grant_type, **kwargs):
+        kwargs['client_id'] = client_id
+        kwargs['client_secret'] = client_secret
+        kwargs['grant_type'] = grant_type
+        return requests.post('https://api.artsy.net/oauth2/access_token',
+                params=kwargs)
+
     def new_request(self, method, path, **kwargs):
-        token = self.get_xapp_token().json()['token']
         url = '%s/%s' % (self.BASE_URL_API, path)
         return requests.request(method, url, 
-                headers={'X-Xapp-Token': token}, **kwargs)
+                headers={
+                    'X-Xapp-Token': self.xapp_token['token'],
+                    'X-Access-Token': self.access_token['access_token']
+                }, **kwargs)
 
     def get(self, path, **kwargs):
         return self.new_request('GET', path, **kwargs)
