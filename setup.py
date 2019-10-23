@@ -13,7 +13,7 @@ setup(
   download_url = 'https://github.com/rodrigosavian/python-artsy/tarball/1.1',
   keywords = ['artsy', 'python', 'client', 'api'],
   install_requires=[
-    'requests==2.6.0',
+    'requests==2.20.0',
   ],
   classifiers = [],
 )
